@@ -130,10 +130,19 @@ app.post('/solve-math', async (req, res) => {
             }
         );
 
+        // ارسال دیتای کامل برای هماهنگی با result.candidates?.[0] در فرانت‌تند
         res.json(response.data);
+
     } catch (error) {
-        console.error('MathAI Solver Error:', error);
-        res.status(500).json({ error: 'خطا در حل مسئله توسط KamiMAIS' });
+        // لاگ دقیق برای عیب‌یابی در کنسول رندر
+        console.error('--- MathAI Solver Error Detail ---');
+        if (error.response) {
+            console.error('Status:', error.response.status);
+            console.error('Data:', JSON.stringify(error.response.data, null, 2));
+        } else {
+            console.error('Message:', error.message);
+        }
+        res.status(500).json({ error: 'خطای داخلی سرور در بخش KamiMAIS' });
     }
 });
 

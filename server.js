@@ -38,5 +38,32 @@ app.post('/chat', async (req, res) => {
     }
 });
 
+app.post('/tts', async (req, res) => {
+    try {
+        const { text } = req.body;
+        const apiKey = process.env.GEMINI_API_KEY;
+
+        const response = await axios.post(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`,
+            {
+                contents: [{ parts: [{ text: text }] }],
+                generationConfig: {
+                    responseModalities: ["AUDIO"],
+                    speechConfig: {
+                        voiceConfig: {
+                            prebuiltVoiceConfig: { voiceName: "Puck" } // می‌توانید نام صدا را تغییر دهید
+                        }
+                    }
+                }
+            }
+        );
+
+        res.json(response.data);
+    } catch (error) {
+        console.error('TTS Error:', error.response ? error.response.data : error.message);
+        res.status(500).json({ error: 'داده صوتی معتبری دریافت نشد.' });
+    }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));

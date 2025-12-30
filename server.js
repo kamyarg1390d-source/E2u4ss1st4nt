@@ -1,12 +1,16 @@
+require('dotenv').config();
 const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
-require('dotenv').config();
+const OpenAI = require('openai');
 
 const app = express();
 // افزایش حجم مجاز برای ارسال تصاویر سنگین
 app.use(express.json({ limit: '20mb' }));
 app.use(cors());
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 app.post('/chat', async (req, res) => {
     try {

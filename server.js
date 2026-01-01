@@ -42,63 +42,24 @@ app.post('/chat', async (req, res) => {
     }
 });
 
-const GPT_MODEL = "gpt-4o-mini-tts"; // مدل GPT برای TTS
-const GEMINI_MODEL = "gemini-2.5-flash-preview-tts"; // مدل Gemini برای fallback
-
 app.post('/tts', async (req, res) => {
-    const { text } = req.body;
-
     try {
-        // GPT TTS
-        const gptResponse = await axios.post(
-            "https://api.openai.com/v1/audio/speech",
-            {
-                model: GPT_MODEL,
-                voice: "alloy", // صدای مرد آموزشی
-                input: text,
-                format: "mp3",
-                speechRate: 0.85 // سرعت کمتر، لحن آموزشی
-            },
-            {
-                headers: {
-                    "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
-                    "Content-Type": "application/json"
-                }
-            }
-        );
-
-        return res.json(gptResponse.data);
-    } catch (err) {
-        console.error("GPT TTS Error:", err.response?.data || err.message);
-
-        // اگر خطای 429 بود یا هر خطای دیگری
-        if (err.response?.status === 429) {
-            console.log("GPT محدود شده، fallback به Gemini TTS...");
-        }
-
-        try {
-            // Gemini fallback
-            const geminiResponse = await axios.post(
-                `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${process.env.GEMINI_API_KEY}`,
-                {
-                    contents: [{ parts: [{ text: text }] }],
-                    generationConfig: {
-                        responseModalities: ["AUDIO"],
-                        speechConfig: {
-                            voiceConfig: {
-                                prebuiltVoiceConfig: { voiceName: "alloy" } // صدای مرد آموزشی
-                            },
-                            speechRate: 0.85
+        const { text } = req.body;
+        const apiKey = process.env.GEMINI_API_KEY;
+        const response = await axios.post(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`,
+                contents: [{ parts: [{ text: text }] }],
+                generationConfig: {
+                    responseModalities: ["AUDIO"],
+                    speechConfig: {
+                        voiceConfig: {
+                            prebuiltVoiceConfig: { voiceName: "Puck" } // می‌توانید نام صدا را تغییر دهید
                         }
                     }
-                }
-            );
-
-            return res.json(geminiResponse.data);
-        } catch (gemErr) {
-            console.error("Gemini TTS Error:", gemErr.response?.data || gemErr.message);
-            return res.status(500).json({ error: "خطا در تولید صدا با هر دو سرویس" });
-        }
+        res.json(response.data);
+    } catch (error) {
+        console.error('TTS Error:', error.response ? error.response.data : error.message);
+        res.status(500).json({ error: 'داده صوتی معتبری دریافت نشد.' });
     }
 });
 
